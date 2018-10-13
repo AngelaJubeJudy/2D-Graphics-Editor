@@ -1,5 +1,4 @@
-# Graduate Computer Graphics, CSCI-GA 2270-001 Fall 2018
-# Assignment_2: 2D Vector graphics editor
+# CSCI-GA 2270-001 Fall2018 Computer Graphics Assignment_2: 2D Vector Graphics Editor
 
 [![Build Status](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy.svg?token=sppqB6eFKVufzLrtS82k&branch=master)](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy)
 
@@ -15,7 +14,7 @@ make
 ```
 
 ## Contents
-###*1.1 Triangle Soup Editor*
+### *1.1 Triangle Soup Editor*
 
 key "i": Triangle Insertion Mode
 * ENABLED: Every triple of subsequent mouse clicks will create a triangle. 
@@ -31,7 +30,7 @@ and every movement of the mouse (while keeping the button pressed) will result i
 key "p": Triangle Deletion Mode
 *  ENABLED: When the mouse is pressed, the triangle below the cursor is deleted.
 
-###*1.2 Rotation / Scale*
+### *1.2 Rotation / Scale*
 
 key "h" and " "j": Triangle Rotation Mode
 * ENABLED: The triangle selected will rotate around its barycenter by 10 degress clockwise or counter-clockwise. 
@@ -39,13 +38,13 @@ key "h" and " "j": Triangle Rotation Mode
 key "k" and " "l": Triangle Scaling Mode
 * ENABLED: The triangle selected will scale up or down by 25% around its barycenter. 
 
-###*1.3 Color*
+### *1.3 Color*
 
 key "c": Triangle Coloring Mode
 * ENABLED: Every mouse click will select the vertex closer to the current mouse position. 
 After a vertex is selected, pressing a key from '1' to '9' will change its color. 
            
-###*1.4 View Control*
+### *1.4 View Control*
 
 key "+" and "-": Triangle Zooming Mode
 * ENABLED: Increase/Decrease the zoom by 20% zooming in/out in the center of the screen. 
@@ -53,7 +52,7 @@ key "+" and "-": Triangle Zooming Mode
 key "w", "a", "s", "d": Triangle Zooming Mode
 * ENABLED: Translate the entire scene respectively down, right, up, left, by 20% of the window size.
 
-###*1.5 Add Keyframing*
+### *1.5 Add Keyframing*
 
 key "f": Triangle Zooming Mode
 * ENABLED: Animates the properties (size, position, or rotation) of objects using keyframe. 
