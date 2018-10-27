@@ -56,3 +56,11 @@ key "w", "a", "s", "d": Triangle Zooming Mode
 
 key "f": Triangle Zooming Mode
 * ENABLED: Animates the properties (size, position, or rotation) of objects using keyframe. 
+
+### *1.8 Shader Translation/Scaling/Rotation*
+
+key "h", "j", "k", "l": Triangle Scaling/Rotation Mode
+
+* ENABLED: Upload triangles in a single VBO using offsets for drawing them one by one. 
+Upload to the GPU the transformation model (as a uniform matrix) that transforms the selected triangle from its canonical position to the current position (obtained by combining translations, scaling and rotations). 
+The transformation has been executed in the vertex shader, and the content of the VBO storing the vertex positions never updated.
