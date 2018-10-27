@@ -7,29 +7,36 @@
 using namespace std;
 using namespace Eigen;
 
-// VertexBufferObject Definition: vertices, properties
+// VertexBufferObject Definition: vertices, other properties
 VertexBufferObject VBO;
 VertexBufferObject VBO_C;
 
-// Matrix Definition: MatrixXf M(rows,cols)
-Eigen::MatrixXf V(2,3);
-Eigen::MatrixXf Vertex(2,3); // each triangle has the size of 6 = 2 * 3 vertices
-Eigen::MatrixXf C(3,3); // property: color
+// Matrix Definition: defined as MatrixXf M(rows,cols)
+Eigen::MatrixXf V(2,3); // store the vertex positions of initial example
+Eigen::MatrixXf Vertex(2,3); // store the vertex positions; each triangle has the size of 6 = 2dim_xy * 3#v values
+Eigen::MatrixXf C(3,3); // store the property: color
 Eigen::Matrix4f view(4,4); // contains the view transformation
-Eigen::Matrix4f trs(4,4); // contains the view transformation
+Eigen::Matrix4f trs(4,4); // contains the transformation matrix; uploaded to GPU as a uniform in order to execute the transformation in the shader
 
 // Global Variable: Triangle Insertion Mode
 int clicks = 0;
 int insertion = 1;
-
 // Global Variable: Triangle Translation Mode
 int selectTri = 0;
 Vector2f beginning(0, 0);
 Vector2f ending(0, 0);
-
 // Global Variable: Triangle Deletion Mode
 int deleteTri = 0;
 int deletion = 0;
+// Global Variable: Triangle Rotation and Scaling Mode
+Eigen::Matrix4f rotation(4,4);
+Eigen::Matrix4f scaling(4,4);
+Eigen::Matrix4f trsToOri(4,4);
+Eigen::Matrix4f trsBack(4,4);
+int rotTri = 0;
+int clockwise = 350, counter_clockwise = 10;
+float scale_up = 1.25, scale_down = 0.75;
+Vector2f curBarycenter;
 
 // Mode Control
 struct modeFlags{
@@ -57,26 +64,20 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 }
 
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-    // Get the position of the mouse in the window
-    double xpos, ypos;
+    // Convert screen position to world coordinates (NOTE: y axis is flipped in glfw)
+    double xpos, ypos; // Get the position of the mouse in the window
     glfwGetCursorPos(window, &xpos, &ypos);
-
-    // Get the size of the window
-    int width, height;
+    int width, height; // Get the size of the window
     glfwGetWindowSize(window, &width, &height);
-
-    // Convert screen position to world coordinates
-    // NOTE: y axis is flipped in glfw
     double xworld = ((xpos/double(width))*2)-1;
     double yworld = (((height-1-ypos)/double(height))*2)-1;
 
     // Keep track of the mouse clicks
-
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
         printf("mouse enter: (%f, %f)\n", xworld, yworld);
 
         if(mode.modeI == true){
-            // Update the info of triangle vertices (previous info kept)
+            // Update the info of triangle vertices (previous info kept) on the CPU side
             Vertex.conservativeResize(2, clicks + 1);
             Vertex.col(clicks) << xworld, yworld;
             clicks++;
@@ -86,12 +87,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             float p_x = ((xpos / float(width)) * 2) - 1.0;
             float p_y = (((height - 1 - ypos) / float(height)) * 2) - 1.0;
             beginning << p_x, p_y;
-            Eigen::Vector2f cur(p_x, p_y);
 
             // Loop on each triangle inserted: i is the index of triangle
             for (unsigned i = 0; i < Vertex.cols() / 3; i++) {
-                // Get the position of triangle vertices
-                Vector2f a, b, c;
+                Vector2f a, b, c; // Get the position of triangle vertices
                 a << Vertex.col(i*3);
                 b << Vertex.col(i*3 + 1);
                 c << Vertex.col(i*3 + 2);
@@ -104,11 +103,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 float area_apc = abs(numerator_apc) / 2.0;
                 float numerator_abp = a_x * (b_y - p_y) + b_x * (p_y - a_y) + p_x * (a_y - b_y);
                 float area_abp = abs(numerator_abp) / 2.0;
-                float alpha = area_pbc / area_abc;
-                float beta = area_apc / area_abc;
-                float gamma = area_abp / area_abc;
 
                 // Figure out whether p is inside the triangle constructed by points a, b, c
+                float alpha = area_pbc / area_abc, beta = area_apc / area_abc, gamma = area_abp / area_abc;
                 if ((alpha >= 0 && alpha <= 1) && (beta >= 0 && beta <= 1) && (gamma >= 0 && gamma <= 1)) {
                     selectTri = i;
                 }
@@ -119,12 +116,10 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
         if(mode.modeP == true){
             float p_x = ((xpos / float(width)) * 2) - 1.0;
             float p_y = (((height - 1 - ypos) / float(height)) * 2) - 1.0;
-            Eigen::Vector2f cur(p_x, p_y);
 
             // Loop on each triangle inserted: i is the index of triangle
             for (unsigned i = 0; i < Vertex.cols() / 3; i++) {
-                // Get the position of triangle vertices
-                Vector2f a, b, c;
+                Vector2f a, b, c; // Get the position of triangle vertices
                 a << Vertex.col(i*3);
                 b << Vertex.col(i*3 + 1);
                 c << Vertex.col(i*3 + 2);
@@ -137,11 +132,9 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 float area_apc = abs(numerator_apc) / 2.0;
                 float numerator_abp = a_x * (b_y - p_y) + b_x * (p_y - a_y) + p_x * (a_y - b_y);
                 float area_abp = abs(numerator_abp) / 2.0;
-                float alpha = area_pbc / area_abc;
-                float beta = area_apc / area_abc;
-                float gamma = area_abp / area_abc;
 
                 // Figure out whether p is inside the triangle constructed by points a, b, c
+                float alpha = area_pbc / area_abc, beta = area_apc / area_abc, gamma = area_abp / area_abc;
                 if ((alpha >= 0 && alpha <= 1) && (beta >= 0 && beta <= 1) && (gamma >= 0 && gamma <= 1)) {
                     deleteTri = i;
                     deletion++;
@@ -159,6 +152,35 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             }
             Vertex.conservativeResize(numRows,numCols);
         }// end of Triangle Deletion Mode
+
+        if(mode.modeH == true || mode.modeJ == true || (mode.modeK == true || mode.modeL == true)){
+            float p_x = ((xpos / float(width)) * 2) - 1.0;
+            float p_y = (((height - 1 - ypos) / float(height)) * 2) - 1.0;
+
+            // Loop on each triangle inserted: i is the index of triangle
+            for (unsigned i = 0; i < Vertex.cols() / 3; i++) {
+                Vector2f a, b, c; // Get the position of triangle vertices
+                a << Vertex.col(i*3);
+                b << Vertex.col(i*3 + 1);
+                c << Vertex.col(i*3 + 2);
+                float a_x = a(0), a_y = a(1), b_x = b(0), b_y = b(1), c_x = c(0), c_y = c(1);
+                float numerator_abc = a_x * (b_y - c_y) + b_x * (c_y - a_y) + c_x * (a_y - b_y);
+                float area_abc = abs(numerator_abc) / 2.0;
+                float numerator_pbc = p_x * (b_y - c_y) + b_x * (c_y - p_y) + c_x * (p_y - b_y);
+                float area_pbc = abs(numerator_pbc) / 2.0;
+                float numerator_apc = a_x * (p_y - c_y) + p_x * (c_y - a_y) + c_x * (a_y - p_y);
+                float area_apc = abs(numerator_apc) / 2.0;
+                float numerator_abp = a_x * (b_y - p_y) + b_x * (p_y - a_y) + p_x * (a_y - b_y);
+                float area_abp = abs(numerator_abp) / 2.0;
+
+                // Figure out whether p is inside the triangle constructed by points a, b, c
+                float alpha = area_pbc / area_abc, beta = area_apc / area_abc, gamma = area_abp / area_abc;
+                if ((alpha >= 0 && alpha <= 1) && (beta >= 0 && beta <= 1) && (gamma >= 0 && gamma <= 1)) {
+                    rotTri = i;
+                }
+            }// end of inside/outside judgement on cursor
+            std::cout << "Triangle No." << rotTri+1 << " Rotated Clockwise! " << std::endl;
+        }// end of Triangle Rotation & Scaling Mode
     }// end of mouse PRESSED
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
@@ -167,63 +189,54 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             ending << xworld, yworld;
             printf("mouse direction: (%f, %f)\n", ending(0)-beginning(0), ending(1)-beginning(1));
             int index = selectTri*3;
+
+            // Update the position of vertices on the CPU side
             Vertex.col(index) << Vertex.col(index) + ending - beginning;
             Vertex.col(index + 1) << Vertex.col(index + 1) + ending - beginning;
             Vertex.col(index + 2) << Vertex.col(index + 2) + ending - beginning;
             VBO.update(Vertex);
         }
     }// end of mouse RELEASED
-
     // Upload the vertex set to the GPU
     VBO.update(Vertex);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-    // Key Options
-    switch (key){
-        case  GLFW_KEY_1:
-            // Update the position of the first vertex
-            V.col(0) << -0.5,  0.5;
-            break;
-        case GLFW_KEY_2:
-            V.col(0) << 0,  0.5;
-            break;
-        case  GLFW_KEY_3:
-            V.col(0) << 0.5,  0.5;
-            break;
+    switch (key){ // Key Options
         case  GLFW_KEY_I:
-            // Triangle Insertion
             std::cout << "Triangle Insertion Mode: Enabled\n" << std::endl;
             mode = {true, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
             glfwSetTime (10.0);
             break;
         case GLFW_KEY_O:
-            // Triangle Translation
             std::cout << "Triangle Translation Mode: Enabled\n" << std::endl;
             mode = {false, true, false, false, false, false, false, false, false, false, false, false, false, false, false};
             glfwSetTime (10.0);
             break;
         case  GLFW_KEY_P:
-            // Triangle Deletion
             std::cout << "Triangle Deletion Mode: Enabled\n" << std::endl;
             mode = {false, false, true, false, false, false, false, false, false, false, false, false, false, false, false};
             glfwSetTime (10.0);
             break;
         case  GLFW_KEY_H:
-            // Clockwise rotation
-            V.col(0) << -0.5,  0.5;
+            std::cout << "Triangle Rotation (clockwise) Mode: Enabled\n" << std::endl;
+            mode = {false, false, false, true, false, false, false, false, false, false, false, false, false, false, false};
+            glfwSetTime (10.0);
             break;
         case GLFW_KEY_J:
-            // Counter-clockwise rotation
-            V.col(0) << 0,  0.5;
+            std::cout << "Triangle Rotation (counter-clockwise) Mode: Enabled\n" << std::endl;
+            mode = {false, false, false, false, true, false, false, false, false, false, false, false, false, false, false};
+            glfwSetTime (10.0);
             break;
         case  GLFW_KEY_K:
-            // Scale up
-            V.col(0) << 0.5,  0.5;
+            std::cout << "Triangle Scaling (up) Mode: Enabled\n" << std::endl;
+            mode = {false, false, false, false, false, true, false, false, false, false, false, false, false, false, false};
+            glfwSetTime (10.0);
             break;
         case  GLFW_KEY_L:
-            // Scale down
-            V.col(0) << -0.5,  0.5;
+            std::cout << "Triangle Scaling (down) Mode: Enabled\n" << std::endl;
+            mode = {false, false, false, false, false, false, true, false, false, false, false, false, false, false, false};
+            glfwSetTime (10.0);
             break;
         case GLFW_KEY_C:
             // Coloring
@@ -262,6 +275,21 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         default:
             break;
     }
+}
+
+/*
+ * helper function: Calculating the Barycenter of A Triangle
+ * a, b, c: 3 vertices of the triangle, counter-clockwise (a, b, c)
+ * return: the barycenter of the given triangle
+ * */
+Vector2f barycenter(Vector2f a, Vector2f b, Vector2f c){
+    float a_x = a(0), a_y = a(1);
+    float b_x = b(0), b_y = b(1);
+    float c_x = c(0), c_y = c(1);
+    float barycenter_x = (a_x + b_x + c_x) / 3;
+    float barycenter_y = (a_y + b_y + c_y) / 3;
+    Vector2f barycenter(barycenter_x, barycenter_y);
+    return barycenter;
 }
 
 int main(void) {
@@ -392,7 +420,7 @@ int main(void) {
                 0,           0, 0, 1;
         glUniformMatrix4fv(program.uniform("view"), 1, GL_FALSE, view.data());
 
-        // Initialize the Translation Matrix if the triangle is selected
+        // Initialize the Translation Matrix as an identity matrix if the triangle is NOT selected
         trs << 1, 0, 0, 0,
                0, 1, 0, 0,
                0, 0, 1, 0,
@@ -402,17 +430,13 @@ int main(void) {
         // Clear the FrameBuffer
         glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-//        glClear(GL_COLOR_BUFFER_BIT);
-
         // Enable blending test
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
         // Enable Depth Test: (side effect) disable the highlight effects
 //        glEnable(GL_DEPTH_TEST);
 
-        if(clicks == 0){
-            // Draw an initial triangle
+        if(clicks == 0){ // Draw an initial triangle
             glDrawArrays(GL_TRIANGLES, 0, 3);
         }else if (clicks > 0){
             glDrawArrays(GL_TRIANGLES, 0, clicks);
@@ -466,14 +490,13 @@ int main(void) {
                     glDrawArrays(GL_LINE_LOOP, clicks - 2, 3);
                 }
             }
-            
+
             // The third click: draw a triangle
             if(clicks != 0 && clicks % 3 == 0){
                 glDrawArrays(GL_TRIANGLES, clicks - 3, 3);
                 glUniform3f(program.uniform("triangleColor"), 0.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f);
                 glDrawArrays(GL_LINE_LOOP, clicks - 3, 3);
-                // Figure out the total number of inserted triangles
-                insertion = clicks / 3;
+                insertion = clicks / 3; // Figure out the total number of inserted triangles
             }
             glDrawArrays(GL_TRIANGLES, 0, clicks);
         }// end of Triangle Insertion Mode
@@ -486,17 +509,60 @@ int main(void) {
             int index = selectTri*3;
             glUniform3f(program.uniform("triangleColor"), 1.0f, 1.0f, 0.0f);
             glDrawArrays(GL_TRIANGLES, index, 3);
-
-            // Debugging info
-            printf("the beginning of movement: (%f, %f)\n", beginning(0), beginning(1));
-            printf("the end of movement: (%f, %f)\n", ending(0), ending(1));
-            printf("translation direction: (%f, %f)\n", ending(0)-beginning(0), ending(1)-beginning(1));
-
         }// end of Triangle Translation Mode
 
         if(mode.modeP == true) {
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
         }// end of Triangle Deletion Mode
+
+        if(mode.modeH == true || mode.modeJ == true || mode.modeK == true || mode.modeL == true) {
+            glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
+
+            // Highlight the selected triangle
+            int index_rot = rotTri*3;
+            glUniform3f(program.uniform("triangleColor"), 205.0/255.0, 133.0/255.0, 63.0/255.0);
+            glDrawArrays(GL_TRIANGLES, index_rot, 3);
+
+            // Make rotation and scaling are done around the barycenter
+            curBarycenter = barycenter(Vertex.col(index_rot), Vertex.col(index_rot+1), Vertex.col(index_rot+2));
+            trsToOri << 1, 0, 0, -curBarycenter(0),
+                    0, 1, 0, -curBarycenter(1),
+                    0, 0, 1, 0,
+                    0, 0, 0, 1;
+            trsBack << 1, 0, 0, curBarycenter(0),
+                    0, 1, 0, curBarycenter(1),
+                    0, 0, 1, 0,
+                    0, 0, 0, 1;
+
+            // Update the transformation matrix: transformation done in the vertex shader
+            if(mode.modeH == true){
+                rotation << cos(clockwise), -sin(clockwise), 0, 0,
+                            sin(clockwise), cos(clockwise),  0, 0,
+                            0,              0,               1, 0,
+                            0,              0,               0, 1;
+                trs <<  trsBack * rotation * trsToOri;
+            }else if (mode.modeJ == true){
+                rotation << cos(counter_clockwise), -sin(counter_clockwise), 0, 0,
+                            sin(counter_clockwise), cos(counter_clockwise),  0, 0,
+                            0,                      0,                       1, 0,
+                            0,                      0,                       0, 1;
+                trs <<  trsBack * rotation * trsToOri;
+            }else if(mode.modeK == true){
+                scaling <<  scale_up,   0,           0, 0,
+                            0,          scale_up,    0, 0,
+                            0,          0,           1, 0,
+                            0,          0,           0, 1;
+                trs <<  trsBack * scaling * trsToOri;
+            }else if (mode.modeL == true){
+                scaling <<  scale_down, 0,           0, 0,
+                            0,          scale_down,  0, 0,
+                            0,          0,           1, 0,
+                            0,          0,           0, 1;
+                trs <<  trsBack * scaling * trsToOri;
+            }
+            glUniformMatrix4fv(program.uniform("Translation"), 1, GL_FALSE, trs.data());
+            glDrawArrays(GL_TRIANGLES, index_rot, 3); // Re-draw the transformed triangle
+        }// end of Triangle Rotation & Scaling Mode
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -505,7 +571,6 @@ int main(void) {
     std::cout << "Triangle Deleted: " << deletion << std::endl;
     std::cout << "Current # of Triangles:" << insertion - deletion << std::endl;
 
-    // Deallocate opengl memory
     program.free();
     VAO.free();
     VBO.free();
