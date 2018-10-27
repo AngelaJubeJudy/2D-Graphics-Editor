@@ -31,15 +31,15 @@ key "o": Triangle Translation Mode
 and every movement of the mouse (while keeping the button pressed) will result in a corresponding [translation of the triangle](/screenshots/1.1_TriangleTranslationMode_translate.PNG). 
 
 key "p": Triangle Deletion Mode
-*  ENABLED: When the mouse is [pressed](/screenshots/1.1_TriangleDeletionMode_1), [the triangle below the cursor is deleted](/screenshots/1.1_TriangleDeletionMode_2.PNG).
+*  ENABLED: When the mouse is pressed, [the triangle](/screenshots/1.1_TriangleDeletionMode_1.PNG) below the cursor is [deleted](/screenshots/1.1_TriangleDeletionMode_2.PNG).
 
 ### *1.2 Rotation / Scale*
 
 key "h" and " "j": Triangle Rotation Mode
-* ENABLED: The triangle selected will rotate around its barycenter by 10 degress clockwise or counter-clockwise. 
+* ENABLED: The triangle selected will rotate around its barycenter by 10 degress [clockwise](/screenshots/1.2_TriangleRotationClockwise.PNG) or [counter-clockwise](1.2_TriangleRotationCounterclockwise). 
 
 key "k" and " "l": Triangle Scaling Mode
-* ENABLED: The triangle selected will scale up or down by 25% around its barycenter. 
+* ENABLED: The triangle selected will scale [up](/screenshots/1.2_TriangleScaleUp.PNG) or [down](/screenshots/1.2_TriangleScaleDown.PNG) by 25% around its barycenter. 
 
 ### *1.3 Color*
 
