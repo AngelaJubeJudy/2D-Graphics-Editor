@@ -18,17 +18,20 @@ make
 
 key "i": Triangle Insertion Mode
 * ENABLED: Every triple of subsequent mouse clicks will create a triangle. 
-The first click will create the starting point of the segment, which will be immediately visualized. 
-As the mouse is moved, a preview of a segment will appear. 
-After the second mouse click, a preview of the triangle will appear. 
+The first click will create [the starting point](/screenshots/1.1_preview_StartingPoint.png) of the segment, which will be immediately visualized. 
+ 
+As the mouse is moved, [a preview of a segment](/screenshots/1.1_preview_Segment.png) will appear.
+
+After the second mouse click, [a preview of the triangle](/screenshots/1.1_preview_Triangle.png) will appear.
+
 After the third click, the current preview will transform into the final triangle.
 
 key "o": Triangle Translation Mode
-* ENABLED: Each mouse click will selected the triangle below the cursor (which will be highlighted), 
-and every movement of the mouse (while keeping the button pressed) will result in a corresponding translation of the triangle. 
+* ENABLED: Each mouse click will selected the triangle below the cursor (which will be [highlighted](/screenshots/1.1_TriangleTranslationMode_highlight.PNG)), 
+and every movement of the mouse (while keeping the button pressed) will result in a corresponding [translation of the triangle](/screenshots/1.1_TriangleTranslationMode_translate.PNG). 
 
 key "p": Triangle Deletion Mode
-*  ENABLED: When the mouse is pressed, the triangle below the cursor is deleted.
+*  ENABLED: When the mouse is [pressed](/screenshots/1.1_TriangleDeletionMode_1), [the triangle below the cursor is deleted](/screenshots/1.1_TriangleDeletionMode_2.PNG).
 
 ### *1.2 Rotation / Scale*
 
