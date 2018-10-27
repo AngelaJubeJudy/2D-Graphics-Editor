@@ -34,7 +34,8 @@ Eigen::Matrix4f scaling(4,4);
 Eigen::Matrix4f trsToOri(4,4);
 Eigen::Matrix4f trsBack(4,4);
 int rotTri = 0;
-int clockwise = 350, counter_clockwise = 10;
+const double pi = 3.14159265358979323846;
+float clockwise = -10*pi/180, counter_clockwise = 10*pi/180;
 float scale_up = 1.25, scale_down = 0.75;
 Vector2f curBarycenter;
 
