@@ -24,7 +24,7 @@ As the mouse is moved, [a preview of a segment](/screenshots/1.1_preview_Segment
 
 After the second mouse click, [a preview of the triangle](/screenshots/1.1_preview_Triangle.png) will appear.
 
-After the third click, the current preview will transform into the final triangle.
+After the third click, the current preview will transform into [the final triangle](/screenshots/1.1_TriangleInsertionMode.PNG).
 
 key "o": Triangle Translation Mode
 * ENABLED: Each mouse click will selected the triangle below the cursor (which will be [highlighted](/screenshots/1.1_TriangleTranslationMode_highlight.PNG)), 
