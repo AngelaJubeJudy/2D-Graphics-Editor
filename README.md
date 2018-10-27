@@ -36,7 +36,7 @@ key "p": Triangle Deletion Mode
 ### *1.2 Rotation / Scale*
 
 key "h" and " "j": Triangle Rotation Mode
-* ENABLED: The triangle selected will rotate around its barycenter by 10 degress [clockwise](/screenshots/1.2_TriangleRotationClockwise.PNG) or [counter-clockwise](1.2_TriangleRotationCounterclockwise). 
+* ENABLED: The triangle selected will rotate around its barycenter by 10 degress [clockwise](/screenshots/1.2_TriangleRotationClockwise.PNG) or [counter-clockwise](/screenshots/1.2_TriangleRotationCounterclockwise.PNG). 
 
 key "k" and " "l": Triangle Scaling Mode
 * ENABLED: The triangle selected will scale [up](/screenshots/1.2_TriangleScaleUp.PNG) or [down](/screenshots/1.2_TriangleScaleDown.PNG) by 25% around its barycenter. 
