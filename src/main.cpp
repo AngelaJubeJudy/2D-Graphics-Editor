@@ -165,22 +165,25 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 if(distance_1 < closer){
                     closer = distance_1;
                     recolorVer = i*3;
+                    std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
                 }
                 float distance_2 = (float)(sqrt((xworld - b_x)*(xworld - b_x)+(yworld - b_y)*(yworld - b_y)));
                 if(distance_2 < closer){
                     closer = distance_2;
                     recolorVer = i*3 + 1;
+                    std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
                 }
                 float distance_3 = (float)(sqrt((xworld - c_x)*(xworld - c_x)+(yworld - c_y)*(yworld - c_y)));
                 if(distance_3 < closer){
                     closer = distance_3;
                     recolorVer = i*3 + 2;
+                    std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
                 }
             }// end of finding the closer vertex
 
-            newColors << 128.0f/255.0f, 178.0f/255.0f, 1,            1,             1, 124.0f/255.0f, 0, 30.0f/255.0f,  128.0f/255.0f,
-                         0,             34.0f/255.0f,  69.0f/255.0f, 165.0f/255.0f, 1, 252.0f/255.0f, 1, 144.0f/255.0f, 0,
-                         0,             34.0f/255.0f,  0,            0,             0, 0,             1, 1,             128.0f/255.0f;
+            newColors << 128.0f/255.0f, 178.0f/255.0f, 1,            1,             1, 124.0f/255.0f, 0,             30.0f/255.0f,  188.0f/255.0f,
+                         0,             34.0f/255.0f,  69.0f/255.0f, 165.0f/255.0f, 1, 252.0f/255.0f, 1,             144.0f/255.0f, 143.0f/255.0f,
+                         0,             34.0f/255.0f,  0,            0,             0, 0,             127.0f/255.0f, 1,             143.0f/255.0f;
         }// end of Triangle Coloring Mode
     }// end of mouse PRESSED
 
@@ -246,30 +249,39 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             break;
         case GLFW_KEY_1:
             recoloring = 1;
+            std::cout << "New Color: Maroon" << std::endl;
             break;
         case GLFW_KEY_2:
             recoloring = 2;
+            std::cout << "New Color: Firebrick" << std::endl;
             break;
         case GLFW_KEY_3:
             recoloring = 3;
+            std::cout << "New Color: Tomato" << std::endl;
             break;
         case GLFW_KEY_4:
             recoloring = 4;
+            std::cout << "New Color: Orange" << std::endl;
             break;
         case GLFW_KEY_5:
             recoloring = 5;
+            std::cout << "New Color: Gold" << std::endl;
             break;
         case GLFW_KEY_6:
             recoloring = 6;
+            std::cout << "New Color: Lawn" << std::endl;
             break;
         case GLFW_KEY_7:
             recoloring = 7;
+            std::cout << "New Color: Spring" << std::endl;
             break;
         case GLFW_KEY_8:
             recoloring = 8;
+            std::cout << "New Color: Dodger" << std::endl;
             break;
         case GLFW_KEY_9:
             recoloring = 9;
+            std::cout << "New Color: Rosy" << std::endl;
             break;
         case  GLFW_KEY_W:
             std::cout << "Translate Whole Scene Down: Enabled\n" << std::endl;
@@ -484,8 +496,7 @@ int main(void) {
                 glfwGetCursorPos(window, &xpos, &ypos);
                 int w, h;
                 glfwGetWindowSize(window, &w, &h);
-                double xworld = ((xpos/double(width))*2)-1;
-                double yworld = (((height-1-ypos)/double(height))*2)-1;
+                double xworld = ((xpos/double(width))*2)-1, yworld = (((height-1-ypos)/double(height))*2)-1;
                 Eigen::Vector2f cur(xworld, yworld);
 
                 // Preview a line segment
@@ -509,8 +520,7 @@ int main(void) {
                 glfwGetCursorPos(window, &xpos, &ypos);
                 int w, h;
                 glfwGetWindowSize(window, &w, &h);
-                double xworld = ((xpos/double(width))*2)-1;
-                double yworld = (((height-1-ypos)/double(height))*2)-1;
+                double xworld = ((xpos/double(width))*2)-1, yworld = (((height-1-ypos)/double(height))*2)-1;
                 Eigen::Vector2f cur(xworld, yworld);
 
                 // Preview a triangle
@@ -596,66 +606,14 @@ int main(void) {
 
         if(mode.modeC == true) {
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
-            std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
+            Vector3f newColor = newColors.col(recoloring - 1);
+            float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
 
-            // Renew the vertex color and then linearly interpolate the triangle
-            if(recoloring == 10){
+            if(recoloring != 10){
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 10){
                 std::cout << "Previous Color Remained!" << std::endl;
-            }else if(recoloring == 1){
-                std::cout << "New Color: Maroon" << std::endl;
-                Vector3f newColor = newColors.col(0);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-//                glDrawArrays(GL_POINTS, recolorVer, 1);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 2){
-                std::cout << "New Color: Firebrick" << std::endl;
-                Vector3f newColor = newColors.col(1);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 3){
-                std::cout << "New Color: Orange Red" << std::endl;
-                Vector3f newColor = newColors.col(2);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 4){
-                std::cout << "New Color: Orange" << std::endl;
-                Vector3f newColor = newColors.col(3);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 5){
-                std::cout << "New Color: Yellow" << std::endl;
-                Vector3f newColor = newColors.col(4);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 6){
-                std::cout << "New Color: Lawn Green" << std::endl;
-                Vector3f newColor = newColors.col(5);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 7){
-                std::cout << "New Color: Aqua" << std::endl;
-                Vector3f newColor = newColors.col(6);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 8){
-                std::cout << "New Color: Dodger Blue" << std::endl;
-                Vector3f newColor = newColors.col(7);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 9){
-                std::cout << "New Color: Purple" << std::endl;
-                Vector3f newColor = newColors.col(8);
-                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
-                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
             }
         }// end of Triangle Coloring Mode
 
