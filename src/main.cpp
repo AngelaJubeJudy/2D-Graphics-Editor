@@ -579,21 +579,21 @@ int main(void) {
             // Update the transformation matrix: transformation done in the vertex shader
             if(mode.modeW == true){ // down
                 view << aspect_ratio, 0, 0, 0,
-                        0,            1, 0, (float)((((height-1+0.2)/double(height))*2)-1),
+                        0,            1, 0, -(float)((((height-1+0.2*height)/double(height))*2)-1),
                         0,            0, 1, 0,
                         0,            0, 0, 1;
             }else if (mode.modeA == true){ // right
-                view << aspect_ratio, 0, 0, (float)(((0.2/double(width))*2)-1),
+                view << aspect_ratio, 0, 0, -(float)(((0.2*width/double(width))*2)-1),
                         0,            1, 0, 0,
                         0,            0, 1, 0,
                         0,            0, 0, 1;
             }else if(mode.modeS == true){ // up
                 view << aspect_ratio, 0, 0, 0,
-                        0,            1, 0, -(float)((((height-1+0.2)/double(height))*2)-1),
+                        0,            1, 0, (float)((((height-1+0.2*height)/double(height))*2)-1),
                         0,            0, 1, 0,
                         0,            0, 0, 1;
             }else if (mode.modeD == true){ // left
-                view << aspect_ratio, 0, 0, -(float)(((0.2/double(width))*2)-1),
+                view << aspect_ratio, 0, 0, (float)(((0.2*width/double(width))*2)-1),
                         0,            1, 0, 0,
                         0,            0, 1, 0,
                         0,            0, 0, 1;
