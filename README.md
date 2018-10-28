@@ -1,4 +1,5 @@
-# CSCI-GA 2270-001 Fall2018 Computer Graphics Assignment_2: 2D Vector Graphics Editor
+# CSCI-GA 2270-001 Fall2018 Computer Graphics 
+# Assignment_2: 2D Vector Graphics Editor
 
 [![Build Status](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy.svg?token=sppqB6eFKVufzLrtS82k&branch=master)](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy)
 
@@ -53,7 +54,7 @@ key "+" and "-": Triangle Zooming Mode
 * ENABLED: Increase Decrease the zoom by 20% zooming [in](/screenshots/1.4_ZoomIn.PNG)/[out](/screenshots/1.4_ZoomOut.PNG) in the center of the screen. 
 
 key "w", "a", "s", "d": Scene Translation Mode
-* ENABLED: Translate the entire scene respectively [down](/screenshots/1.4_ViewControl_w.PNG), [right](/screenshots/1.4_ViewControl_a.PNG), [up](/screenshots/1.4_ViewControl_s.PNG), [left](/screenshots/1.4_ViewControl_d.PNG), by 20% of the window size.
+* ENABLED: Translate the entire scene respectively [down](/screenshots/1.4_ViewControl_w-2.PNG), [right](/screenshots/1.4_ViewControl_a-2.PNG), [up](/screenshots/1.4_ViewControl_s-2.PNG), [left](/screenshots/1.4_ViewControl_d-2.PNG), by 20% of the window size.
 
 ### *1.5 Add Keyframing*
 
