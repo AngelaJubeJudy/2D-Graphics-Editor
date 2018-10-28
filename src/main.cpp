@@ -8,8 +8,7 @@ using namespace std;
 using namespace Eigen;
 
 // VertexBufferObject Definition: vertices, other properties
-VertexBufferObject VBO;
-VertexBufferObject VBO_C;
+VertexBufferObject VBO, VBO_C;
 
 // Matrix Definition: defined as MatrixXf M(rows,cols)
 Eigen::MatrixXf V(2,3); // store the vertex positions of initial example
@@ -41,13 +40,12 @@ Vector2f recolorVer(0, 0);
 Eigen::Matrix4f newColors(3,9);
 // Global Variable: View Control
 Eigen::MatrixXf zoomio(4, 4);
-float zoomin = 0.8;
-float zoomout = 1.2;
+float viewCtrl = 0.2; // zoom and pan 20%
 
 // Mode Control
 struct modeFlags{
     bool modeI, modeO, modeP; // section 1.1
-    bool modeH, modeJ, modeK, modeL; // section 1.2 & 1.8
+    bool modeH, modeJ, modeK, modeL; // section 1.2 (transformation done on the CPU side) & 1.8 (transformation done in the shader)
     bool modeC; // section 1.3
     bool modeW, modeA, modeS, modeD, modeMinus, modePlus; // section 1.4
     bool keyFraming; // section 1.5
@@ -576,38 +574,40 @@ int main(void) {
             int width, height;
             glfwGetWindowSize(window, &width, &height);
             float aspect_ratio = float(height)/float(width);
+            float panReplacement_x = viewCtrl * width;
+            float panReplacement_y = viewCtrl * height;
             // Update the transformation matrix: transformation done in the vertex shader
             if(mode.modeW == true){ // down
                 view << aspect_ratio, 0, 0, 0,
-                        0,            1, 0, -(float)((((height-1+0.2*height)/double(height))*2)-1),
+                        0,            1, 0, (float)(((panReplacement_y/double(height))*2)-1),
                         0,            0, 1, 0,
                         0,            0, 0, 1;
             }else if (mode.modeA == true){ // right
-                view << aspect_ratio, 0, 0, -(float)(((0.2*width/double(width))*2)-1),
+                view << aspect_ratio, 0, 0, -(float)(((panReplacement_x/double(width))*2)-1),
                         0,            1, 0, 0,
                         0,            0, 1, 0,
                         0,            0, 0, 1;
             }else if(mode.modeS == true){ // up
                 view << aspect_ratio, 0, 0, 0,
-                        0,            1, 0, (float)((((height-1+0.2*height)/double(height))*2)-1),
+                        0,            1, 0, -(float)(((panReplacement_y/double(height))*2)-1),
                         0,            0, 1, 0,
                         0,            0, 0, 1;
             }else if (mode.modeD == true){ // left
-                view << aspect_ratio, 0, 0, (float)(((0.2*width/double(width))*2)-1),
+                view << aspect_ratio, 0, 0, (float)(((panReplacement_x/double(width))*2)-1),
                         0,            1, 0, 0,
                         0,            0, 1, 0,
                         0,            0, 0, 1;
             }else if (mode.modeMinus == true){ // zoom in 20%
-                zoomio << zoomin,   0,           0, 0,
-                          0,        zoomin,      0, 0,
-                          0,        0,           1, 0,
-                          0,        0,           0, 1;
+                zoomio << 1.0-viewCtrl,   0,           0, 0,
+                          0,        1.0-viewCtrl,      0, 0,
+                          0,        0,                 1, 0,
+                          0,        0,                 0, 1;
                 view = zoomio * view;
             }else if(mode.modePlus == true){ // zoom out 20%
-                zoomio << zoomout,   0,           0, 0,
-                          0,         zoomout,     0, 0,
-                          0,         0,           1, 0,
-                          0,         0,           0, 1;
+                zoomio << 1.0+viewCtrl,   0,           0, 0,
+                          0,         1.0+viewCtrl,     0, 0,
+                          0,         0,                1, 0,
+                          0,         0,                0, 1;
                 view = zoomio * view;
             }
             glUniformMatrix4fv(program.uniform("view"), 1, GL_FALSE, view.data());
