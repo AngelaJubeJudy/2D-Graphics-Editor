@@ -50,10 +50,10 @@ After a vertex is selected, pressing a key from '1' to '9' will change its color
 ### *1.4 View Control*
 
 key "+" and "-": Triangle Zooming Mode
-* ENABLED: Increase/Decrease the zoom by 20% zooming in/out in the center of the screen. 
+* ENABLED: Increase Decrease the zoom by 20% zooming [in](/screenshots/1.4_ZoomIn.PNG)/[out](/screenshots/1.4_ZoomOut.PNG) in the center of the screen. 
 
-key "w", "a", "s", "d": Triangle Zooming Mode
-* ENABLED: Translate the entire scene respectively down, right, up, left, by 20% of the window size.
+key "w", "a", "s", "d": Scene Translation Mode
+* ENABLED: Translate the entire scene respectively [down](/screenshots/1.4_ViewControl_w.PNG), [right](/screenshots/1.4_ViewControl_a.PNG), [up](/screenshots/1.4_ViewControl_s.PNG), [left](/screenshots/1.4_ViewControl_d.PNG), by 20% of the window size.
 
 ### *1.5 Add Keyframing*
 
