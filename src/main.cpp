@@ -36,12 +36,13 @@ Vector2f curBarycenter;
 // Global Variable: Triangle Coloring Mode
 #define INF (float)1e+300
 float closer = INF;
-Vector2f recolorVer(0, 0);
-Eigen::Matrix4f newColors(3,9);
+int recolorVer = 0;
+Eigen::MatrixXf newColors(3,9);
+int recoloring = 10;
 // Global Variable: View Control
 Eigen::MatrixXf zoomio(4, 4);
 Eigen::MatrixXf pan(4, 4);
-float viewCtrl = 0.2; // zoom and pan 20%
+float viewCtrl = 0.2f; // zoom and pan 20%
 
 // Mode Control
 struct modeFlags{
@@ -163,23 +164,23 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 float distance_1 = (float)(sqrt((xworld - a_x)*(xworld - a_x)+(yworld - a_y)*(yworld - a_y)));
                 if(distance_1 < closer){
                     closer = distance_1;
-                    recolorVer << a_x, a_y;
+                    recolorVer = i*3;
                 }
                 float distance_2 = (float)(sqrt((xworld - b_x)*(xworld - b_x)+(yworld - b_y)*(yworld - b_y)));
                 if(distance_2 < closer){
                     closer = distance_2;
-                    recolorVer << b_x, b_y;
+                    recolorVer = i*3 + 1;
                 }
                 float distance_3 = (float)(sqrt((xworld - c_x)*(xworld - c_x)+(yworld - c_y)*(yworld - c_y)));
                 if(distance_3 < closer){
                     closer = distance_3;
-                    recolorVer << c_x, c_y;
+                    recolorVer = i*3 + 2;
                 }
             }// end of finding the closer vertex
 
-            newColors << 128/255, 178/255, 1,      1,       1, 124/255, 0, 30/255,  128/255,
-                         0,       34/255,  69/255, 165/255, 1, 252/255, 1, 144/255, 0,
-                         0,       34/255,  0,      0,       0, 0,       1, 1,       128/255;
+            newColors << 128.0f/255.0f, 178.0f/255.0f, 1,            1,             1, 124.0f/255.0f, 0, 30.0f/255.0f,  128.0f/255.0f,
+                         0,             34.0f/255.0f,  69.0f/255.0f, 165.0f/255.0f, 1, 252.0f/255.0f, 1, 144.0f/255.0f, 0,
+                         0,             34.0f/255.0f,  0,            0,             0, 0,             1, 1,             128.0f/255.0f;
         }// end of Triangle Coloring Mode
     }// end of mouse PRESSED
 
@@ -242,6 +243,33 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             std::cout << "Triangle Coloring Mode: Enabled\n" << std::endl;
             mode = {false, false, false, false, false, false, false, true, false, false, false, false, false, false, false};
             glfwSetTime (10.0);
+            break;
+        case GLFW_KEY_1:
+            recoloring = 1;
+            break;
+        case GLFW_KEY_2:
+            recoloring = 2;
+            break;
+        case GLFW_KEY_3:
+            recoloring = 3;
+            break;
+        case GLFW_KEY_4:
+            recoloring = 4;
+            break;
+        case GLFW_KEY_5:
+            recoloring = 5;
+            break;
+        case GLFW_KEY_6:
+            recoloring = 6;
+            break;
+        case GLFW_KEY_7:
+            recoloring = 7;
+            break;
+        case GLFW_KEY_8:
+            recoloring = 8;
+            break;
+        case GLFW_KEY_9:
+            recoloring = 9;
             break;
         case  GLFW_KEY_W:
             std::cout << "Translate Whole Scene Down: Enabled\n" << std::endl;
@@ -568,6 +596,67 @@ int main(void) {
 
         if(mode.modeC == true) {
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
+            std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
+
+            // Renew the vertex color and then linearly interpolate the triangle
+            if(recoloring == 10){
+                std::cout << "Previous Color Remained!" << std::endl;
+            }else if(recoloring == 1){
+                std::cout << "New Color: Maroon" << std::endl;
+                Vector3f newColor = newColors.col(0);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+//                glDrawArrays(GL_POINTS, recolorVer, 1);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 2){
+                std::cout << "New Color: Firebrick" << std::endl;
+                Vector3f newColor = newColors.col(1);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 3){
+                std::cout << "New Color: Orange Red" << std::endl;
+                Vector3f newColor = newColors.col(2);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 4){
+                std::cout << "New Color: Orange" << std::endl;
+                Vector3f newColor = newColors.col(3);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 5){
+                std::cout << "New Color: Yellow" << std::endl;
+                Vector3f newColor = newColors.col(4);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 6){
+                std::cout << "New Color: Lawn Green" << std::endl;
+                Vector3f newColor = newColors.col(5);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 7){
+                std::cout << "New Color: Aqua" << std::endl;
+                Vector3f newColor = newColors.col(6);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 8){
+                std::cout << "New Color: Dodger Blue" << std::endl;
+                Vector3f newColor = newColors.col(7);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }else if(recoloring == 9){
+                std::cout << "New Color: Purple" << std::endl;
+                Vector3f newColor = newColors.col(8);
+                float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
+                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+            }
         }// end of Triangle Coloring Mode
 
         if(mode.modeW == true || mode.modeA == true || mode.modeS == true || mode.modeD == true || mode.modeMinus == true || mode.modePlus == true) {
@@ -602,14 +691,14 @@ int main(void) {
                         0, 0, 0, 1;
                 view = pan * view;
             }else if (mode.modeMinus == true){ // zoom in 20%
-                zoomio << 1.0-viewCtrl,   0,           0, 0,
-                          0,        1.0-viewCtrl,      0, 0,
+                zoomio << 1.0f-viewCtrl,   0,           0, 0,
+                          0,        1.0f-viewCtrl,      0, 0,
                           0,        0,                 1, 0,
                           0,        0,                 0, 1;
                 view = zoomio * view;
             }else if(mode.modePlus == true){ // zoom out 20%
-                zoomio << 1.0+viewCtrl,   0,           0, 0,
-                          0,         1.0+viewCtrl,     0, 0,
+                zoomio << 1.0f+viewCtrl,   0,           0, 0,
+                          0,         1.0f+viewCtrl,     0, 0,
                           0,         0,                1, 0,
                           0,         0,                0, 1;
                 view = zoomio * view;
