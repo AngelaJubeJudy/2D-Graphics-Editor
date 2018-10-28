@@ -11,8 +11,8 @@ using namespace Eigen;
 VertexBufferObject VBO, VBO_C;
 
 // Matrix Definition: defined as MatrixXf M(rows,cols)
-Eigen::MatrixXf V(2,3); // store the vertex positions of initial example
-Eigen::MatrixXf Vertex(2,3); // store the vertex positions; each triangle has the size of 6 = 2dim_xy * 3#v values
+Eigen::MatrixXf V(2,3); // store the vertex positions of the initial example
+Eigen::MatrixXf Vertex(2,3); // store the vertex positions; each triangle has the size of 6 = 2#d * 3#v values
 Eigen::MatrixXf C(3,3); // store the property: color
 Eigen::Matrix4f view(4,4); // contains the view transformation
 Eigen::Matrix4f trs(4,4); // contains the transformation matrix; uploaded to GPU as a uniform in order to execute the transformation in the shader
@@ -129,8 +129,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             std::cout << "Triangle No." << deleteTri+1 << " Deleted! " << std::endl;
 
             // Delete the group of selected columns
-            int numRows = Vertex.rows();
-            int numCols = Vertex.cols();
+            int numRows = Vertex.rows(), numCols = Vertex.cols();
             if( 3*deleteTri < numCols ){
                 for(unsigned i = 0; i < 3; i++){
                     Vertex.block(0,3*deleteTri,numRows,numCols-3*deleteTri) = Vertex.block(0,3*deleteTri+1,numRows,numCols-3*deleteTri);
@@ -155,6 +154,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
         if(mode.modeC == true) {
             // Loop on each triangle inserted: i is the index of triangle
+            closer = INF; // Initialize the closer definition for each mouse click
             for (int i = 0; i < Vertex.cols() / 3; i++) {
                 Vector2f a, b, c; // Get the position of triangle vertices
                 a << Vertex.col(i*3);
@@ -165,20 +165,18 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 if(distance_1 < closer){
                     closer = distance_1;
                     recolorVer = i*3;
-                    std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
                 }
                 float distance_2 = (float)(sqrt((xworld - b_x)*(xworld - b_x)+(yworld - b_y)*(yworld - b_y)));
                 if(distance_2 < closer){
                     closer = distance_2;
                     recolorVer = i*3 + 1;
-                    std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
                 }
                 float distance_3 = (float)(sqrt((xworld - c_x)*(xworld - c_x)+(yworld - c_y)*(yworld - c_y)));
                 if(distance_3 < closer){
                     closer = distance_3;
                     recolorVer = i*3 + 2;
-                    std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
                 }
+                std::cout << "Vertex No." << recolorVer << " will be assigned a new color! " << std::endl;
             }// end of finding the closer vertex
 
             newColors << 128.0f/255.0f, 178.0f/255.0f, 1,            1,             1, 124.0f/255.0f, 0,             30.0f/255.0f,  188.0f/255.0f,
@@ -612,8 +610,6 @@ int main(void) {
             if(recoloring != 10){
                 glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
                 glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
-            }else if(recoloring == 10){
-                std::cout << "Previous Color Remained!" << std::endl;
             }
         }// end of Triangle Coloring Mode
 
@@ -621,7 +617,6 @@ int main(void) {
             glUniform3f(program.uniform("triangleColor"), (float)(sin(time * 4.0f) + 1.0f) / 2.0f, (float)(sin(time * 4.0f) + 0.85f) / 2.0f, (float)(sin(time * 4.0f) + 0.73f) / 2.0f);
             int width, height;
             glfwGetWindowSize(window, &width, &height);
-            float aspect_ratio = float(height)/float(width);
             float panReplacement_x = viewCtrl * width, panReplacement_y = viewCtrl * height;
             // Update the transformation matrix: transformation done in the vertex shader
             if(mode.modeW == true){ // down
