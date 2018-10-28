@@ -40,6 +40,7 @@ Vector2f recolorVer(0, 0);
 Eigen::Matrix4f newColors(3,9);
 // Global Variable: View Control
 Eigen::MatrixXf zoomio(4, 4);
+Eigen::MatrixXf pan(4, 4);
 float viewCtrl = 0.2; // zoom and pan 20%
 
 // Mode Control
@@ -413,7 +414,7 @@ int main(void) {
         float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
         glUniform3f(program.uniform("triangleColor"), 0.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f);
 
-        // Adjust the view as window size changing
+        // Initialize the View Matrix adjusting as window size changing if the view control DISABLED
         int width, height;
         glfwGetWindowSize(window, &width, &height);
         float aspect_ratio = float(height)/float(width);
@@ -574,29 +575,32 @@ int main(void) {
             int width, height;
             glfwGetWindowSize(window, &width, &height);
             float aspect_ratio = float(height)/float(width);
-            float panReplacement_x = viewCtrl * width;
-            float panReplacement_y = viewCtrl * height;
+            float panReplacement_x = viewCtrl * width, panReplacement_y = viewCtrl * height;
             // Update the transformation matrix: transformation done in the vertex shader
             if(mode.modeW == true){ // down
-                view << aspect_ratio, 0, 0, 0,
-                        0,            1, 0, (float)(((panReplacement_y/double(height))*2)-1),
-                        0,            0, 1, 0,
-                        0,            0, 0, 1;
+                pan <<  1, 0, 0, 0,
+                        0, 1, 0, (float)(((panReplacement_y/double(height))*2)-1),
+                        0, 0, 1, 0,
+                        0,  0, 0, 1;
+                view = pan * view;
             }else if (mode.modeA == true){ // right
-                view << aspect_ratio, 0, 0, -(float)(((panReplacement_x/double(width))*2)-1),
-                        0,            1, 0, 0,
-                        0,            0, 1, 0,
-                        0,            0, 0, 1;
+                view << 1, 0, 0, -(float)(((panReplacement_x/double(width))*2)-1),
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1;
+                view = pan * view;
             }else if(mode.modeS == true){ // up
-                view << aspect_ratio, 0, 0, 0,
-                        0,            1, 0, -(float)(((panReplacement_y/double(height))*2)-1),
-                        0,            0, 1, 0,
-                        0,            0, 0, 1;
+                pan <<  1, 0, 0, 0,
+                        0, 1, 0, -(float)(((panReplacement_y/double(height))*2)-1),
+                        0, 0, 1, 0,
+                        0, 0, 0, 1;
+                view = pan * view;
             }else if (mode.modeD == true){ // left
-                view << aspect_ratio, 0, 0, (float)(((panReplacement_x/double(width))*2)-1),
-                        0,            1, 0, 0,
-                        0,            0, 1, 0,
-                        0,            0, 0, 1;
+                view << 1, 0, 0, (float)(((panReplacement_x/double(width))*2)-1),
+                        0, 1, 0, 0,
+                        0, 0, 1, 0,
+                        0, 0, 0, 1;
+                view = pan * view;
             }else if (mode.modeMinus == true){ // zoom in 20%
                 zoomio << 1.0-viewCtrl,   0,           0, 0,
                           0,        1.0-viewCtrl,      0, 0,
