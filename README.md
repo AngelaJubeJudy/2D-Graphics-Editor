@@ -45,8 +45,12 @@ key "k" and " "l": Triangle Scaling Mode
 ### *1.3 Color*
 
 key "c": Triangle Coloring Mode
-* ENABLED: Every mouse click will select the vertex closer to the current mouse position. 
-After a vertex is selected, pressing a key from '1' to '9' will change its color. 
+* ENABLED: Every mouse click will [select](/screenshots/1.3_tri1-color9-v2.PNG) the vertex [closer](/screenshots/1.3_tri1-color9-v3.PNG) to the current mouse position. 
+After a vertex is [selected](/screenshots/1.3_tri2-color9-v3.PNG), pressing a key from '1' to '9' will change its color. 
+
+1 for [Maroon](/screenshots/1.3_tri1-color1.PNG), 2 for [Firebrick](/screenshots/1.3_tri1-color2.PNG), 3 for [Tomato](/screenshots/1.3_tri1-color3.PNG), 
+4 for [Orange](/screenshots/1.3_tri1-color4.PNG), 5 for [Gold](/screenshots/1.3_tri1-color5.PNG), 6 for [Lawn](/screenshots/1.3_tri1-color6.PNG), 
+7 for [Spring](/screenshots/1.3_tri1-color7.PNG), 8 for [Dodger](/screenshots/1.3_tri1-color8.PNG), and 9 for [Rosy](/screenshots/1.3_tri1-color9.PNG).  
            
 ### *1.4 View Control*
 
@@ -67,4 +71,32 @@ key "h", "j", "k", "l": Triangle Scaling/Rotation Mode
 
 * ENABLED: Upload triangles in a single VBO using offsets for drawing them one by one. 
 Upload to the GPU the transformation model (as a uniform matrix) that transforms the selected triangle from its canonical position to the current position (obtained by combining translations, scaling and rotations). 
+
+```bash
+if(mode.modeH == true){
+    rotation << cos(clockwise), -sin(clockwise), 0, 0,
+                sin(clockwise), cos(clockwise),  0, 0,
+                0,              0,               1, 0,
+                0,              0,               0, 1;
+    trs <<  trsBack * rotation * trsToOri;
+}
+...
+glUniformMatrix4fv(program.uniform("Translation"), 1, GL_FALSE, trs.data());
+```
+
 The transformation has been executed in the vertex shader, and the content of the VBO storing the vertex positions never updated.
+
+```bash
+const GLchar* vertex_shader =
+            "#version 150 core\n"
+                    "in vec2 position;"
+                    "in vec3 color;"
+                    "uniform mat4 view;"
+                    "uniform mat4 Translation;"
+                    "out vec3 f_color;"
+                    "void main()"
+                    "{"
+                    "    gl_Position = view * Translation * vec4(position, 0.0, 1.0);"
+                    "    f_color = color;"
+                    "}";
+```
