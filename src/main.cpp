@@ -12,36 +12,40 @@ VertexBufferObject VBO, VBO_C;
 
 // Matrix Definition: defined as MatrixXf M(rows,cols)
 Eigen::MatrixXf V(2,3); // store the vertex positions of the initial example
-Eigen::MatrixXf Vertex(2,3); // store the vertex positions; each triangle has the size of 6 = 2#d * 3#v values
 Eigen::MatrixXf C(3,3); // store the property: color
-Eigen::Matrix4f view(4,4); // contains the view transformation
-Eigen::Matrix4f trs(4,4); // contains the transformation matrix; uploaded to GPU as a uniform in order to execute the transformation in the shader
 
 // Global Variable: Triangle Insertion Mode
 int clicks = 0, insertion = 1;
+Eigen::MatrixXf Vertex(2,3); // store the vertex positions; each triangle has the size of 6 = 2#d * 3#v values
 // Global Variable: Triangle Translation Mode
 int selectTri = 0;
 Vector2f beginning(0, 0), ending(0, 0);
 // Global Variable: Triangle Deletion Mode
 int deleteTri = 0, deletion = 0;
+
 // Global Variable: Triangle Rotation and Scaling Mode
 Eigen::Matrix4f rotation(4,4);
 Eigen::Matrix4f scaling(4,4);
 Eigen::Matrix4f trsToOri(4,4), trsBack(4,4);
+Eigen::Matrix4f trs(4,4); // contains the transformation matrix; uploaded to GPU as a uniform in order to execute the transformation in the shader
 int rotTri = 0;
 const double pi = 3.14159265358979323846;
 float clockwise = (float)(-10*pi/180), counter_clockwise = (float)(10*pi/180);
 float scale_up = 1.25, scale_down = 0.75;
 Vector2f curBarycenter;
+
 // Global Variable: Triangle Coloring Mode
 #define INF (float)1e+300
 float closer = INF;
 int recolorVer = 0;
+Eigen::MatrixXf Color(3,3); // store the vertex property: each vertex has its own color
 Eigen::MatrixXf newColors(3,9);
 int recoloring = 10;
+
 // Global Variable: View Control
 Eigen::MatrixXf zoomio(4, 4);
 Eigen::MatrixXf pan(4, 4);
+Eigen::Matrix4f view(4,4); // contains the view transformation
 float viewCtrl = 0.2f; // zoom and pan 20%
 
 // Mode Control
@@ -97,6 +101,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             Vertex.conservativeResize(2, clicks + 1);
             Vertex.col(clicks) << (float)xworld, (float)yworld;
             clicks++;
+            C.conservativeResize(3, Vertex.cols());
         }// end of Triangle Insertion Mode
 
         if(mode.modeO == true){
@@ -136,6 +141,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 }
             }
             Vertex.conservativeResize(numRows,numCols);
+            C.conservativeResize(3, Vertex.cols()); // Update the size of vertex colors
         }// end of Triangle Deletion Mode
 
         if(mode.modeH == true || mode.modeJ == true || (mode.modeK == true || mode.modeL == true)){
@@ -421,7 +427,7 @@ int main(void) {
                     "uniform vec3 triangleColor;"
                     "void main()"
                     "{"
-                    "    outColor = vec4(triangleColor, 1.0);"
+                    "    outColor = vec4(f_color, 1.0);"
                     "}";
 
     // Compile the two shaders and upload the binary to the GPU
@@ -450,7 +456,8 @@ int main(void) {
         // Set the uniform value of color decpending on the time difference
         auto t_now = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
-        glUniform3f(program.uniform("triangleColor"), 0.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f);
+        float redPercent = 0.0f, greenPercent = (float)(sin(time * 4.0f) + 1.0f) / 2.0f, bluePercent = (float)(sin(time * 4.0f) + 1.0f) / 2.0f;
+        glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
 
         // Initialize the View Matrix adjusting as window size changing if the view control DISABLED
         int width, height;
@@ -547,6 +554,20 @@ int main(void) {
             // Highlight the selected triangle
             int index = selectTri*3;
             glUniform3f(program.uniform("triangleColor"), 1.0f, 1.0f, 0.0f);
+            for(int i = 0; i < Vertex.cols(); i++){
+                if(i == index || i == index+1 || i == index+2){
+                    C.col(i) << 1, 1, 0;
+                }else{
+                    if(i % 3 == 0){
+                        C.col(i) << redPercent, 0, 0;
+                    }else if(i % 3 == 1){
+                        C.col(i) << 0, greenPercent, 0;
+                    }else if(i % 3 == 2){
+                        C.col(i) << 0, 0, bluePercent;
+                    }
+                }
+            }
+            VBO_C.update(C);
             glDrawArrays(GL_TRIANGLES, index, 3);
         }// end of Triangle Translation Mode
 
@@ -560,6 +581,21 @@ int main(void) {
             // Highlight the selected triangle
             int index_rot = rotTri*3;
             glUniform3f(program.uniform("triangleColor"), (float)(205.0/255.0), (float)(133.0/255.0), (float)(63.0/255.0));
+
+            for(int i = 0; i < Vertex.cols(); i++){
+                if(i == index_rot || i == index_rot+1 || i == index_rot+2){
+                    C.col(i) << (float)(205.0/255.0), (float)(133.0/255.0), (float)(63.0/255.0);
+                }else{
+                    if(i % 3 == 0){
+                        C.col(i) << redPercent, 0, 0;
+                    }else if(i % 3 == 1){
+                        C.col(i) << 0, greenPercent, 0;
+                    }else if(i % 3 == 2){
+                        C.col(i) << 0, 0, bluePercent;
+                    }
+                }
+            }
+            VBO_C.update(C);
 
             // Make rotation and scaling are done around the barycenter
             curBarycenter = barycenter(Vertex.col(index_rot), Vertex.col(index_rot+1), Vertex.col(index_rot+2));
@@ -602,19 +638,48 @@ int main(void) {
             glDrawArrays(GL_TRIANGLES, index_rot, 3); // Re-draw the transformed triangle
         }// end of Triangle Rotation & Scaling Mode
 
-        if(mode.modeC == true) {
+        if(mode.modeC == true) { // OpenGl uses barycentric coordinates for interpolation
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
             Vector3f newColor = newColors.col(recoloring - 1);
             float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
 
-            if(recoloring != 10){
+            if(recoloring != 10){ // New color of the closer vertex should be linearly interpolated inside the triangle
                 glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
                 glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
+
+                for(int i = 0; i < C.cols(); i++){
+                    if(i == recolorVer){
+                        C.col(i) << redPercent, greenPercent, bluePercent;
+                    }else{
+                        if(i % 3 == 0){
+                            C.col(i) << redPercent, 0, 0;
+                        }else if(i % 3 == 1){
+                            C.col(i) << 0, greenPercent, 0;
+                        }else if(i % 3 == 2){
+                            C.col(i) << 0, 0, bluePercent;
+                        }
+                    }
+                }
+                VBO_C.update(C);
+
             }
         }// end of Triangle Coloring Mode
 
         if(mode.modeW == true || mode.modeA == true || mode.modeS == true || mode.modeD == true || mode.modeMinus == true || mode.modePlus == true) {
-            glUniform3f(program.uniform("triangleColor"), (float)(sin(time * 4.0f) + 1.0f) / 2.0f, (float)(sin(time * 4.0f) + 0.85f) / 2.0f, (float)(sin(time * 4.0f) + 0.73f) / 2.0f);
+            float redPercent = (float)(sin(time * 4.0f) + 1.0f) / 2.0f, greenPercent = (float)(sin(time * 4.0f) + 0.85f) / 2.0f, bluePercent = (float)(sin(time * 4.0f) + 0.73f) / 2.0f;
+            glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+
+            for(int i = 0; i < C.cols(); i++){
+                if(i % 3 == 0){
+                    C.col(i) << redPercent, 0, 0;
+                }else if(i % 3 == 1){
+                    C.col(i) << 0, greenPercent, 0;
+                }else if(i % 3 == 2){
+                    C.col(i) << 0, 0, bluePercent;
+                }
+            }
+            VBO_C.update(C);
+
             int width, height;
             glfwGetWindowSize(window, &width, &height);
             float panReplacement_x = viewCtrl * width, panReplacement_y = viewCtrl * height;
@@ -626,7 +691,7 @@ int main(void) {
                         0,  0, 0, 1;
                 view = pan * view;
             }else if (mode.modeA == true){ // right
-                view << 1, 0, 0, -(float)(((panReplacement_x/double(width))*2)-1),
+                pan << 1, 0, 0, -(float)(((panReplacement_x/double(width))*2)-1),
                         0, 1, 0, 0,
                         0, 0, 1, 0,
                         0, 0, 0, 1;
@@ -638,22 +703,22 @@ int main(void) {
                         0, 0, 0, 1;
                 view = pan * view;
             }else if (mode.modeD == true){ // left
-                view << 1, 0, 0, (float)(((panReplacement_x/double(width))*2)-1),
+                pan << 1, 0, 0, (float)(((panReplacement_x/double(width))*2)-1),
                         0, 1, 0, 0,
                         0, 0, 1, 0,
                         0, 0, 0, 1;
                 view = pan * view;
             }else if (mode.modeMinus == true){ // zoom in 20%
-                zoomio << 1.0f-viewCtrl,   0,           0, 0,
-                          0,        1.0f-viewCtrl,      0, 0,
-                          0,        0,                 1, 0,
-                          0,        0,                 0, 1;
+                zoomio << 1.0f-viewCtrl,   0,                 0, 0,
+                          0,               1.0f-viewCtrl,     0, 0,
+                          0,               0,                 1, 0,
+                          0,               0,                 0, 1;
                 view = zoomio * view;
             }else if(mode.modePlus == true){ // zoom out 20%
-                zoomio << 1.0f+viewCtrl,   0,           0, 0,
-                          0,         1.0f+viewCtrl,     0, 0,
-                          0,         0,                1, 0,
-                          0,         0,                0, 1;
+                zoomio << 1.0f+viewCtrl,   0,                 0, 0,
+                          0,               1.0f+viewCtrl,     0, 0,
+                          0,               0,                 1, 0,
+                          0,               0,                 0, 1;
                 view = zoomio * view;
             }
             glUniformMatrix4fv(program.uniform("view"), 1, GL_FALSE, view.data());
