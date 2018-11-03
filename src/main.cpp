@@ -50,6 +50,7 @@ float viewCtrl = 0.2f; // zoom and pan 20%
 
 // Global Variable: Keyframing
 float kfFactor = (rand()%(10 - 1 + 1) + 1) / 10.0f;
+Eigen::MatrixXf NextVertex(4, 4);
 
 // Mode Control
 struct modeFlags{
@@ -782,11 +783,15 @@ int main(void) {
                       0,               0,                 1, 0,
                       0,               0,                 0, 1;
             rotation << cos(clockwise), -sin(clockwise), 0, 0,
-                    sin(clockwise), cos(clockwise),  0, 0,
-                    0,              0,               1, 0,
-                    0,              0,               0, 1;
+                        sin(clockwise), cos(clockwise),  0, 0,
+                        0,              0,               1, 0,
+                        0,              0,               0, 1;
             //Update all states
-            VBO_1.update(rotation * zoomio * (Vertex, 0.0f, 1.0f));
+            for(int i = 0; i < Vertex.cols(); i++){
+                NextVertex.conservativeResize(4, 4+i);
+                NextVertex.col(i) << Vertex.col(i), 0.0f, 1.0f;
+            }
+            VBO_1.update(rotation * zoomio * NextVertex);
             for(int i = 0; i < C.cols(); i++){
                 if(i % 3 == 0){
                     C.col(i) << redPercent, 0, 0;
