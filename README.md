@@ -54,7 +54,7 @@ After a vertex is [selected](/screenshots/1.3_tri2-color9-v3.PNG), pressing a ke
            
 ### *1.4 View Control*
 
-key "+" and "-": Triangle Zooming Mode
+key "+" and "-": Scene Zooming Mode
 * ENABLED: Increase Decrease the zoom by 20% zooming [in](/screenshots/1.4_ZoomIn.PNG)/[out](/screenshots/1.4_ZoomOut.PNG) in the center of the screen. 
 
 key "w", "a", "s", "d": Scene Translation Mode
@@ -62,12 +62,14 @@ key "w", "a", "s", "d": Scene Translation Mode
 
 ### *1.5 Add Keyframing*
 
-key "f": Triangle Zooming Mode
+key "f": Keyframing Mode
 * ENABLED: Animates the properties (size, position, or rotation) of objects using keyframe. 
+Next frame is stored in a new VBO. 
+A timer is used to automate the animation. 
 
 ### *1.8 Shader Translation/Scaling/Rotation*
 
-key "h", "j", "k", "l": Triangle Scaling/Rotation Mode
+key "h", "j", "k", "l": Triangle Translation/Scaling/Rotation Mode
 
 * ENABLED: Upload triangles in a single VBO using offsets for drawing them one by one. 
 Upload to the GPU the transformation model (as a uniform matrix) that transforms the selected triangle from its canonical position to the current position (obtained by combining translations, scaling and rotations). 
