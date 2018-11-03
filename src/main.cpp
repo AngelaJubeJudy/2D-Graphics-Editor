@@ -8,7 +8,7 @@ using namespace std;
 using namespace Eigen;
 
 // VertexBufferObject Definition: vertices, other properties
-VertexBufferObject VBO, VBO_C;
+VertexBufferObject VBO, VBO_1, VBO_C;
 
 // Matrix Definition: defined as MatrixXf M(rows,cols)
 Eigen::MatrixXf V(2,3); // store the vertex positions of the initial example
@@ -47,6 +47,9 @@ Eigen::MatrixXf zoomio(4, 4);
 Eigen::MatrixXf pan(4, 4);
 Eigen::Matrix4f view(4,4); // contains the view transformation
 float viewCtrl = 0.2f; // zoom and pan 20%
+
+// Global Variable: Keyframing
+float kfFactor = (rand()%(10 - 1 + 1) + 1) / 10.0f;
 
 // Mode Control
 struct modeFlags{
@@ -97,13 +100,13 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
         printf("mouse enter: (%f, %f)\n", xworld, yworld);
 
+        // section 1.1
         if(mode.modeI == true){ // Update the info of triangle vertices (previous info kept) on the CPU side
             Vertex.conservativeResize(2, clicks + 1);
             Vertex.col(clicks) << (float)xworld, (float)yworld;
             clicks++;
             C.conservativeResize(3, Vertex.cols());
         }// end of Triangle Insertion Mode
-
         if(mode.modeO == true){
             float p_x = (float)(((xpos / float(width)) * 2) - 1.0);
             float p_y = (float)((((height - 1 - ypos) / float(height)) * 2) - 1.0);
@@ -118,7 +121,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             }// end of inside/outside judgement on cursor
             std::cout << "Triangle No." << selectTri+1 << " Selected! " << std::endl;
         }// end of Triangle Translation Mode
-
         if(mode.modeP == true){
             float p_x = (float)(((xpos / float(width)) * 2) - 1.0);
             float p_y = (float)((((height - 1 - ypos) / float(height)) * 2) - 1.0);
@@ -144,6 +146,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             C.conservativeResize(3, Vertex.cols()); // Update the size of vertex colors
         }// end of Triangle Deletion Mode
 
+        // section 1.2
         if(mode.modeH == true || mode.modeJ == true || (mode.modeK == true || mode.modeL == true)){
             float p_x = (float)(((xpos / float(width)) * 2) - 1.0);
             float p_y = (float)((((height - 1 - ypos) / float(height)) * 2) - 1.0);
@@ -158,6 +161,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             std::cout << "Triangle No." << rotTri+1 << " Rotated Clockwise! " << std::endl;
         }// end of Triangle Rotation & Scaling Mode
 
+        // section 1.3
         if(mode.modeC == true) {
             // Loop on each triangle inserted: i is the index of triangle
             closer = INF; // Initialize the closer definition for each mouse click
@@ -193,6 +197,8 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE){
         printf("mouse leave: (%f, %f)\n", xworld, yworld);
+
+        // section 1.2
         if(mode.modeO == true){
             ending << (float)xworld, (float)yworld;
             printf("mouse direction: (%f, %f)\n", ending(0)-beginning(0), ending(1)-beginning(1));
@@ -207,6 +213,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }// end of mouse RELEASED
     // Upload the vertex set to the GPU
     VBO.update(Vertex);
+    VBO_1.update(Vertex);
 }
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -393,17 +400,15 @@ int main(void) {
     VAO.init();
     VAO.bind();
 
-    // Initialize the VBO with the initial vertices data
-    VBO.init();
+    VBO.init(); // Initialize the VBO with the initial vertices data
+    VBO_1.init(); // Initialize the VBO with the initial vertices data
     V.resize(2,3);
     V << 0,  0.5, -0.5, 0.5, -0.5, -0.5;
     VBO.update(V);
-    // Initialize the second VBO for the property color
-    VBO_C.init();
+    VBO_1.update(V);
+    VBO_C.init();// Initialize the second VBO for the property color
     C.resize(3,3);
-    C << 1,  0, 0,
-         0,  1, 0,
-         0,  0, 1;
+    C << 1,  0, 0, 0,  1, 0, 0,  0, 1;
     VBO_C.update(C);
 
     // Initialize the OpenGL Program
@@ -411,13 +416,18 @@ int main(void) {
     const GLchar* vertex_shader =
             "#version 150 core\n"
                     "in vec2 position;"
+                    "in vec2 position1;"
                     "in vec3 color;"
                     "uniform mat4 view;"
                     "uniform mat4 Translation;"
+                    "uniform float delta;"
                     "out vec3 f_color;"
+                    "vec4 newPosition;"
                     "void main()"
                     "{"
-                    "    gl_Position = view * Translation * vec4(position, 0.0, 1.0);"
+                    "    vec2 intermediatePos = position;"
+                    "    if(delta >= 0.0f) intermediatePos = (position1 - position) * delta;"
+                    "    gl_Position = view * Translation * vec4(intermediatePos, 0.0, 1.0);"
                     "    f_color = color;"
                     "}";
     const GLchar* fragment_shader =
@@ -436,6 +446,7 @@ int main(void) {
 
     // Inputs of vertex shader: vertices and any other properties
     program.bindVertexAttribArray("position",VBO);
+    program.bindVertexAttribArray("position1",VBO_1);
     program.bindVertexAttribArray("color",VBO_C);
 
     // Save the current time --- it will be used to dynamically change the triangle color
@@ -456,6 +467,7 @@ int main(void) {
         // Set the uniform value of color decpending on the time difference
         auto t_now = std::chrono::high_resolution_clock::now();
         float time = std::chrono::duration_cast<std::chrono::duration<float>>(t_now - t_start).count();
+        glUniform1f(program.uniform("delta"), -1.0f);
         float redPercent = 0.0f, greenPercent = (float)(sin(time * 4.0f) + 1.0f) / 2.0f, bluePercent = (float)(sin(time * 4.0f) + 1.0f) / 2.0f;
         glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
 
@@ -482,7 +494,7 @@ int main(void) {
         // Enable blending test
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//        glEnable(GL_DEPTH_TEST);// Enable Depth Test: (side effect) disable the highlight effects
+//        glEnable(GL_DEPTH_TEST);// Enable Depth Test: (side effect) will disable the highlight effects
 
         if(clicks == 0){ // Draw an initial triangle
             glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -490,10 +502,11 @@ int main(void) {
             glDrawArrays(GL_TRIANGLES, 0, clicks);
         }
 
-        // Drawing Preview: the starting point, each segment, possible triangle
         if(mode.modeI == true){
-            if(clicks % 3 == 1){
+            if(clicks % 3 == 1){// The first click: draw a starting point, then preview a line segment
                 glUniform3f(program.uniform("triangleColor"), 1.0f, 1.0f, 1.0f);
+                C.col(clicks - 1) << 1.0f, 1.0f, 1.0f;
+                VBO_C.update(C);
                 glDrawArrays(GL_POINTS, clicks - 1, 1);
 
                 // Get the position of the mouse in the window to generate preview
@@ -510,13 +523,17 @@ int main(void) {
                     Vertex.col(clicks) << (float)xworld, (float)yworld;
                     VBO.update(Vertex);
                     glUniform3f(program.uniform("triangleColor"), 1.0f, 1.0f, 1.0f);
+                    C.col(clicks) << 1.0f, 1.0f, 1.0f;
+                    VBO_C.update(C);
                     glDrawArrays(GL_LINE_STRIP, clicks - 1, 2);
                 }
             }
 
-            // The second click: draw a line segment, then preview a triangle
-            if(clicks % 3 == 2){
+            if(clicks % 3 == 2){// The second click: draw a line segment, then preview a triangle
                 glUniform3f(program.uniform("triangleColor"), 1.0f, 1.0f, 1.0f);
+                C.col(clicks - 1) << 1.0f, 1.0f, 1.0f;
+                C.col(clicks - 2) << 1.0f, 1.0f, 1.0f;
+                VBO_C.update(C);
                 glDrawArrays(GL_LINE_STRIP, clicks - 1, 2);
                 glDrawArrays(GL_LINE_STRIP, clicks - 2, 2);
 
@@ -533,21 +550,31 @@ int main(void) {
                     Vertex.conservativeResize(2, clicks + 1);
                     Vertex.col(clicks) << (float)xworld, (float)yworld;
                     VBO.update(Vertex);
+                    C.col(clicks) << 1.0f, 1.0f, 1.0f;
+                    VBO_C.update(C);
                     glDrawArrays(GL_LINE_LOOP, clicks - 2, 3);
                 }
             }
 
-            // The third click: draw a triangle
-            if(clicks != 0 && clicks % 3 == 0){
+            if(clicks != 0 && clicks % 3 == 0){// The third click: draw a triangle
                 glDrawArrays(GL_TRIANGLES, clicks - 3, 3);
                 glUniform3f(program.uniform("triangleColor"), 0.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f, (float)(sin(time * 4.0f) + 1.0f) / 2.0f);
+                for(int i = 0; i < C.cols(); i++){
+                    if(i % 3 == 0){
+                        C.col(i) << 0, 0, 0;
+                    }else if(i % 3 == 1){
+                        C.col(i) << 0, (float)(sin(time * 4.0f) + 1.0f) / 2.0f, 0;
+                    }else if(i % 3 == 2){
+                        C.col(i) << 0, 0, (float)(sin(time * 4.0f) + 1.0f) / 2.0f;
+                    }
+                }
+                VBO_C.update(C);
                 glDrawArrays(GL_LINE_LOOP, clicks - 3, 3);
                 insertion = clicks / 3; // Figure out the total number of inserted triangles
             }
             glDrawArrays(GL_TRIANGLES, 0, clicks);
         }// end of Triangle Insertion Mode
 
-        // Using Barycentric Interpolation
         if(mode.modeO == true) {
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
 
@@ -572,10 +599,30 @@ int main(void) {
         }// end of Triangle Translation Mode
 
         if(mode.modeP == true) {
+            for(int i = 0; i < C.cols(); i++){
+                if(i % 3 == 0){
+                    C.col(i) << redPercent, 0, 0;
+                }else if(i % 3 == 1){
+                    C.col(i) << 0, greenPercent, 0;
+                }else if(i % 3 == 2){
+                    C.col(i) << 0, 0, bluePercent;
+                }
+            }
+            VBO_C.update(C);
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
         }// end of Triangle Deletion Mode
 
         if(mode.modeH == true || mode.modeJ == true || mode.modeK == true || mode.modeL == true) {
+            for(int i = 0; i < C.cols(); i++){
+                if(i % 3 == 0){
+                    C.col(i) << redPercent, 0, 0;
+                }else if(i % 3 == 1){
+                    C.col(i) << 0, greenPercent, 0;
+                }else if(i % 3 == 2){
+                    C.col(i) << 0, 0, bluePercent;
+                }
+            }
+            VBO_C.update(C);
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
 
             // Highlight the selected triangle
@@ -641,15 +688,14 @@ int main(void) {
         if(mode.modeC == true) { // OpenGl uses barycentric coordinates for interpolation
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols());
             Vector3f newColor = newColors.col(recoloring - 1);
-            float redPercent = newColor(0), greenPercent = newColor(1), bluePercent = newColor(2);
 
             if(recoloring != 10){ // New color of the closer vertex should be linearly interpolated inside the triangle
-                glUniform3f(program.uniform("triangleColor"), redPercent, greenPercent, bluePercent);
+                glUniform3f(program.uniform("triangleColor"), newColor(0), newColor(1), newColor(2));
                 glDrawArrays(GL_TRIANGLES, (recolorVer/3) * 3, 3);
 
                 for(int i = 0; i < C.cols(); i++){
                     if(i == recolorVer){
-                        C.col(i) << redPercent, greenPercent, bluePercent;
+                        C.col(i) << newColor(0), newColor(1), newColor(2);
                     }else{
                         if(i % 3 == 0){
                             C.col(i) << redPercent, 0, 0;
@@ -726,8 +772,33 @@ int main(void) {
         }// end of View Control Mode
 
         if(mode.keyFraming == true){
+            // Set up the interpolation factor
+            auto t_now2 = std::chrono::high_resolution_clock::now();
+            float curDuration = std::chrono::duration_cast<std::chrono::duration<float>>(t_now2 - t_start).count();
+            glUniform1f(program.uniform("delta"), (float)(sin(curDuration * 4.0f) + 1.0f) / 2.0f);
+            // Prepare for a new frame
+            zoomio << 1.0f+viewCtrl,   0,                 0, 0,
+                      0,               1.0f+viewCtrl,     0, 0,
+                      0,               0,                 1, 0,
+                      0,               0,                 0, 1;
+            rotation << cos(clockwise), -sin(clockwise), 0, 0,
+                    sin(clockwise), cos(clockwise),  0, 0,
+                    0,              0,               1, 0,
+                    0,              0,               0, 1;
+            //Update all states
+            VBO_1.update(rotation * zoomio * (Vertex, 0.0f, 1.0f));
+            for(int i = 0; i < C.cols(); i++){
+                if(i % 3 == 0){
+                    C.col(i) << redPercent, 0, 0;
+                }else if(i % 3 == 1){
+                    C.col(i) << 0, greenPercent, 0;
+                }else if(i % 3 == 2){
+                    C.col(i) << 0, 0, bluePercent;
+                }
+            }
+            VBO_C.update(C);
             glDrawArrays(GL_TRIANGLES, 0, Vertex.cols()); // Re-draw the whole scene
-        }// end of Keyframing Mode
+        }// end of Keyframing Animation Mode
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -739,6 +810,8 @@ int main(void) {
     program.free();
     VAO.free();
     VBO.free();
+    VBO_1.free();
+    VBO_C.free();
     glfwTerminate();
 
     return 0;
