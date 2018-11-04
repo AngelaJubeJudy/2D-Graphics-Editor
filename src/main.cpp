@@ -370,7 +370,7 @@ int main(void) {
 #endif
 
     // Create a windowed mode window and its OpenGL context
-    window = glfwCreateWindow(921, 921, "CG Assignment-2 (dz1120)", NULL, NULL);
+    window = glfwCreateWindow(921, 921, "2D-Vector-Graphics-Editor", NULL, NULL);
     if (!window){
         glfwTerminate();
         return -1;
