@@ -1,6 +1,6 @@
 # Topic: 2D Vector Graphics Editor
 
-[![Build Status](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy.svg?token=sppqB6eFKVufzLrtS82k&branch=master)](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy)
+[![Build Status](https://travis-ci.com/AngelaJubeJudy/2D-Vector-Graphics-Editor.svg?branch=master)](https://travis-ci.com/AngelaJubeJudy/2D-Vector-Graphics-Editor)
 
 ## Compilation Instructions
 
