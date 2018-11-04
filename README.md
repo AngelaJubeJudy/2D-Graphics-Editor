@@ -1,13 +1,12 @@
-# CSCI-GA 2270-001 Fall2018 Computer Graphics 
-# Assignment_2: 2D Vector Graphics Editor
+# Topic: 2D Vector Graphics Editor
 
 [![Build Status](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy.svg?token=sppqB6eFKVufzLrtS82k&branch=master)](https://travis-ci.com/NYUGraphics/assignment2-AngelaJubeJudy)
 
 ## Compilation Instructions
 
 ```bash
-git clone --recursive https://github.com/NYUGraphics/assignment2-AngelaJubeJudy
-cd assignment2-AngelaJubeJudy
+git clone --recursive https://github.com/AngelaJubeJudy/2D-Vector-Graphics-Editor
+cd 2D-Vector-Graphics-Editor
 mkdir build
 cd build
 cmake ../ 
@@ -67,7 +66,7 @@ key "f": Keyframing Mode
 Next frame is stored in a new VBO. 
 A timer is used to automate the animation. 
 
-### *1.8 Shader Translation/Scaling/Rotation*
+### *1.6 Shader Translation/Scaling/Rotation*
 
 key "h", "j", "k", "l": Triangle Translation/Scaling/Rotation Mode
 
