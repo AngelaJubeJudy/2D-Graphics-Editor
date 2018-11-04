@@ -1,4 +1,4 @@
-# Topic: 2D Vector Graphics Editor
+# Topic: 2D Graphics Editor
 
 [![Build Status](https://travis-ci.com/AngelaJubeJudy/2D-Vector-Graphics-Editor.svg?branch=master)](https://travis-ci.com/AngelaJubeJudy/2D-Vector-Graphics-Editor)
 
@@ -14,7 +14,7 @@ make
 ```
 
 ## Contents
-### *1.1 Triangle Soup Editor*
+### *1.1 Triangle Editor*
 
 key "i": Triangle Insertion Mode
 * ENABLED: Every triple of subsequent mouse clicks will create a triangle. 
@@ -59,14 +59,14 @@ key "+" and "-": Scene Zooming Mode
 key "w", "a", "s", "d": Scene Translation Mode
 * ENABLED: Translate the entire scene respectively [down](/screenshots/1.4_ViewControl_w-2.PNG), [right](/screenshots/1.4_ViewControl_a-2.PNG), [up](/screenshots/1.4_ViewControl_s-2.PNG), [left](/screenshots/1.4_ViewControl_d-2.PNG), by 20% of the window size.
 
-### *1.5 Add Keyframing*
+### *1.5 Keyframing*
 
 key "f": Keyframing Mode
 * ENABLED: Animates the properties (size, position, or rotation) of objects using keyframe. 
 Next frame is stored in a new VBO. 
 A timer is used to automate the animation. 
 
-### *1.6 Shader Translation/Scaling/Rotation*
+### *1.6 Translation/Scaling/Rotation in Shader*
 
 key "h", "j", "k", "l": Triangle Translation/Scaling/Rotation Mode
 
