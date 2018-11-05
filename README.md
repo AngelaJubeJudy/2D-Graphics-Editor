@@ -1,6 +1,6 @@
 # Topic: 2D Graphics Editor
 
-[![Build Status](https://travis-ci.com/AngelaJubeJudy/2D-Vector-Graphics-Editor.svg?branch=master)](https://travis-ci.com/AngelaJubeJudy/2D-Vector-Graphics-Editor)
+[![Build Status](https://travis-ci.com/AngelaJubeJudy/2D-Graphics-Editor.svg?branch=master)](https://travis-ci.com/AngelaJubeJudy/2D-Vector-Graphics-Editor)
 
 ## Compilation Instructions
 
